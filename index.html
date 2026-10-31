@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mochi — Your Mac Buddy</title>
+  <meta name="description" content="Mochi is an adorable, intelligent AI desktop companion for the web and your Mac." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- Mochi mascot sprite (reused across the page) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="mg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBF8FF"/><stop offset="1" stop-color="#D5BFF0"/></linearGradient>
+  </defs>
+  <symbol id="mochi" viewBox="0 0 200 200">
+    <ellipse cx="100" cy="192" rx="62" ry="7" fill="#29243A" opacity=".1"/>
+    <circle cx="58" cy="52" r="28" fill="#C9B3EE"/>
+    <circle cx="142" cy="52" r="28" fill="#C9B3EE"/>
+    <circle cx="58" cy="52" r="14" fill="#F6C6E2"/>
+    <circle cx="142" cy="52" r="14" fill="#F6C6E2"/>
+    <ellipse cx="100" cy="116" rx="80" ry="72" fill="url(#mg)"/>
+    <ellipse cx="72" cy="78" rx="20" ry="11" fill="#fff" opacity=".75" transform="rotate(-22 72 78)"/>
+    <ellipse cx="74" cy="114" rx="9" ry="12" fill="#29243A"/>
+    <ellipse cx="126" cy="114" rx="9" ry="12" fill="#29243A"/>
+    <circle cx="77" cy="109" r="3.4" fill="#fff"/>
+    <circle cx="129" cy="109" r="3.4" fill="#fff"/>
+    <ellipse cx="54" cy="134" rx="11" ry="6.5" fill="#F6A9CF" opacity=".75"/>
+    <ellipse cx="146" cy="134" rx="11" ry="6.5" fill="#F6A9CF" opacity=".75"/>
+    <path d="M91 136 Q100 146 109 136" stroke="#29243A" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+  </symbol>
+</svg>
+
+<canvas id="confetti" aria-hidden="true"></canvas>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ============ COMMAND PALETTE ============ -->
+<div class="palette" id="palette" hidden>
+  <div class="palette-backdrop" data-close></div>
+  <div class="palette-box" role="dialog" aria-modal="true" aria-label="Command palette">
+    <div class="palette-input">
+      <span aria-hidden="true">⌕</span>
+      <input id="palInput" type="text" placeholder="Jump to a section or run an action…" autocomplete="off" aria-label="Search commands" />
+      <kbd>Esc</kbd>
+    </div>
+    <ul class="palette-list" id="palList" role="listbox"></ul>
+  </div>
+</div>
+
+<!-- ============ NAV ============ -->
+<header class="nav-wrap" id="navWrap">
+  <nav class="nav" aria-label="Main">
+    <a href="#top" class="brand">
+      <svg width="38" height="38" viewBox="0 0 200 200" aria-hidden="true"><use href="#mochi"/></svg>
+      <span><strong>Mochi</strong><small>Your Mac Buddy</small></span>
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#experiences">How It Works</a></li>
+      <li><a href="#desktop">Desktop App</a></li>
+      <li><a href="#creative">Creative Studio</a></li>
+      <li><a href="#privacy">Privacy</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="palette-btn" id="palBtn" type="button" aria-label="Open command palette">Search <kbd>⌘K</kbd></button>
+      <a href="#" class="signin">Sign In</a>
+      <a href="#experiences" class="btn btn-ghost btn-sm">Get Started</a>
+      <a href="#desktop" class="btn btn-primary btn-sm">Download for Mac</a>
+    </div>
+    <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false">☰</button>
+  </nav>
+</header>
+
+<main id="top">
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="hero">
+  <div class="hero-grid">
+    <div class="hero-copy reveal">
+      <span class="pill"><span class="dot"></span>Available on Web · Coming to macOS</span>
+      <h1>Meet Mochi.<br /><span class="accent">Your little AI companion.</span></h1>
+      <p class="hero-sub">More than an AI assistant. A little companion that listens, remembers, creates, and stays by your side.</p>
+      <p class="hero-p">Talk to Mochi naturally, personalize its personality, save your special moments, stay on top of your habits, and bring a little magic to your everyday Mac experience.</p>
+      <div class="btn-row">
+        <a href="#experiences" class="btn btn-primary">Meet Your Mochi →</a>
+        <a href="#desktop" class="btn btn-ghost">Explore the Mac Experience</a>
+      </div>
+    </div>
+
+    <div class="hero-stage reveal">
+      <div class="float-card fc-voice" style="--d:0s">
+        <strong>Voice · listening</strong>
+        <div class="wave" id="heroWave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="float-card fc-transcript" style="--d:.6s">
+        <div class="row-between"><strong>Live transcript</strong><button class="mic-btn" id="micBtn" type="button" aria-pressed="false" aria-label="Start voice input" title="Start voice input">🎙️</button></div>
+        <span class="muted" id="typed" data-live="0">"Remind me to drink water at 4…"</span><b class="caret" aria-hidden="true">|</b>
+      </div>
+
+      <div class="laptop">
+        <div class="lid"><div class="screen">
+          <div class="mini">
+            <div class="mini-side"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="mini-main">
+              <div class="tile purple wide"><b>Good morning, Alex</b><small>Your hydration goal is 62% complete</small></div>
+              <div class="tile"><small>Mood this week</small><strong>Calm · Focused</strong><div class="bar"><i id="moodBar"></i></div></div>
+              <div class="tile"><small>Memories saved</small><strong class="num" id="memCount">48</strong></div>
+            </div>
+          </div>
+        </div></div>
+        <div class="base"></div>
+      </div>
+
+      <div class="float-card fc-memory" style="--d:1.1s">
+        <b class="purple-t">✦ Memory saved</b>
+        <span class="muted">Your first product launch milestone</span>
+      </div>
+      <div class="float-card fc-hydration" style="--d:.3s">
+        <b>💧 Hydration reminder</b>
+        <span class="muted">Time for a glass of water</span>
+      </div>
+      <div class="float-card fc-mood" style="--d:1.6s">
+        <b><span class="status-dot"></span> Mood · Calm</b>
+        <span class="muted">Check-in logged</span>
+      </div>
+      <div class="float-card fc-creative" style="--d:2s">
+        <b>Creative suggestion</b>
+        <span class="muted">Try a tagline for your app launch</span>
+      </div>
+
+      <!-- Hero mascot: pupils follow the cursor, clicking 5 times celebrates -->
+      <svg class="mascot hero-mascot" id="heroMascot" viewBox="0 0 200 200" role="img" aria-label="Mochi mascot, click it five times">
+        <ellipse cx="100" cy="192" rx="62" ry="7" fill="#29243A" opacity=".1"/>
+        <circle cx="58" cy="52" r="28" fill="#C9B3EE"/>
+        <circle cx="142" cy="52" r="28" fill="#C9B3EE"/>
+        <circle cx="58" cy="52" r="14" fill="#F6C6E2"/>
+        <circle cx="142" cy="52" r="14" fill="#F6C6E2"/>
+        <ellipse cx="100" cy="116" rx="80" ry="72" fill="url(#mg)"/>
+        <ellipse cx="72" cy="78" rx="20" ry="11" fill="#fff" opacity=".75" transform="rotate(-22 72 78)"/>
+        <g class="eyes">
+          <g class="eye" id="eyeL"><ellipse cx="74" cy="114" rx="9" ry="12" fill="#29243A"/><circle cx="77" cy="109" r="3.4" fill="#fff"/></g>
+          <g class="eye" id="eyeR"><ellipse cx="126" cy="114" rx="9" ry="12" fill="#29243A"/><circle cx="129" cy="109" r="3.4" fill="#fff"/></g>
+        </g>
+        <ellipse cx="54" cy="134" rx="11" ry="6.5" fill="#F6A9CF" opacity=".75"/>
+        <ellipse cx="146" cy="134" rx="11" ry="6.5" fill="#F6A9CF" opacity=".75"/>
+        <path d="M91 136 Q100 146 109 136" stroke="#29243A" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EXPERIENCES ============ -->
+<section class="section" id="experiences">
+  <div class="head center reveal">
+    <span class="eyebrow">Two connected experiences</span>
+    <h2>Use Mochi on the web, on your Mac, or both.</h2>
+    <p class="lead">Start in your browser today. Add the native Mac app when you want Mochi floating on your desktop.</p>
+  </div>
+  <div class="grid2">
+    <article class="card exp-card reveal">
+      <div class="ico lav">🌐</div>
+      <h3 class="h3-lg">Mochi Web Companion</h3>
+      <p class="small lg">A browser-based experience. No download needed.</p>
+      <ul class="check">
+        <li>AI conversations and voice while the page is open</li>
+        <li>Live speech transcription</li>
+        <li>Memory Vault and Mood Center</li>
+        <li>Creative Studio and Vocal Personality Studio</li>
+        <li>Hydration tracking and focus reminders</li>
+        <li>Browser notifications when permitted</li>
+      </ul>
+    </article>
+    <article class="card exp-card reveal">
+      <div class="ico pink">🖥️</div>
+      <h3 class="h3-lg">Mochi Native Mac App</h3>
+      <p class="small lg">A downloadable macOS app for a deeper desktop experience.</p>
+      <ul class="check">
+        <li>Floating, frameless, transparent mascot</li>
+        <li>Always-on-top and draggable</li>
+        <li>Edge popups from left, right, top, or bottom</li>
+        <li>Global keyboard shortcuts and quick voice activation</li>
+        <li>Native notifications and menu bar integration</li>
+        <li>CLI commands through Mac Terminal</li>
+      </ul>
+    </article>
+  </div>
+  <div class="sync reveal">
+    <div class="sync-icon">⇄</div>
+    <div class="sync-text">
+      <h3>Synchronized Experience</h3>
+      <p class="small lg">Choose Web Companion, the Mac app, or both. Signed-in users can sync preferences, approved memories, and supported account data between devices.</p>
+    </div>
+    <a href="#experiences" class="btn btn-primary">Start on the Web</a>
+  </div>
+  <p class="small center note">System-wide floating features require the native Mac app. Browser features stay available on their own.</p>
+</section>
+
+<!-- ============ FEATURES ============ -->
+<section class="section tint" id="features">
+  <div class="head center reveal">
+    <span class="eyebrow">What Mochi does</span>
+    <h2>Your everyday life, with a little Mochi magic.</h2>
+  </div>
+  <div class="grid3">
+    <article class="card feat reveal"><div class="ico lav">🎙️</div><h3>Talk naturally</h3><p class="small">Have real-time conversations with Mochi using your voice or text. Watch your words appear through live transcription and receive friendly AI responses.</p><span class="tag">Voice · Text · Live transcript</span></article>
+    <article class="card feat reveal"><div class="ico pink">🔖</div><h3>Remembers what matters</h3><p class="small">Save favorite memories, personal milestones, learning achievements, important moments, and preferences in a searchable Memory Vault.</p><span class="tag">Memory Vault</span></article>
+    <article class="card feat reveal"><div class="ico blue">🎚️</div><h3>A personality that feels like yours</h3><p class="small">Customize Mochi's voice pitch, speaking speed, vocal personality, and signature presets. Create your own voice personalities.</p><span class="tag">Vocal Personality Studio</span></article>
+    <article class="card feat reveal"><div class="ico green">💧</div><h3>Your little wellness buddy</h3><p class="small">Stay hydrated, take mindful breaks, track your water intake, and build healthier daily routines with gentle reminders.</p><span class="tag">Hydration · Breaks</span></article>
+    <article class="card feat reveal"><div class="ico lav">✨</div><h3>Understands your creative side</h3><p class="small">Brainstorm product ideas, write content, explore UI/UX concepts, generate prompts, and organize creative projects with Mochi's Creative Studio.</p><span class="tag">Creative Studio</span></article>
+    <article class="card feat reveal"><div class="ico peach">🌙</div><h3>Knows when to play and when to rest</h3><p class="small">Watch Mochi transition between idle, listening, speaking, thinking, sleeping, and hydration states through expressive animations.</p><span class="tag">Expressive states</span></article>
+  </div>
+</section>
+
+<!-- ============ DESKTOP ============ -->
+<section class="section desk" id="desktop">
+  <div class="head center reveal">
+    <span class="eyebrow">Mac desktop app</span>
+    <h2>Not just another app. Your desktop companion.</h2>
+    <p class="lead">Mochi can live right on your Mac desktop, ready whenever you need a little help. Drag Mochi to any edge and it snaps into place.</p>
+  </div>
+  <div class="desk-grid">
+    <div>
+      <div class="wallpaper reveal" id="wall">
+        <div class="menubar"><span>Finder</span><span>File</span><span>Edit</span><span>View</span><span class="ml">Mochi ✦</span><span>Wed 9:41</span></div>
+        <div class="popup" id="popup" data-dir="bottom">
+          <b>Hi, I'm listening ✦</b>
+          <div class="bubble">Let's plan the launch post for Friday.</div>
+          <div class="bubble alt">Here are three hooks. Want a LinkedIn version too?</div>
+          <div class="wave small-wave"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div class="notif"><b>Mochi · Hydration</b><span>Time for a glass of water 💧</span><div class="notif-btns"><button class="chip-btn" type="button">Snooze 10m</button><button class="chip-btn" type="button">Done</button></div></div>
+        <span class="edge e-top">↓ Top edge</span>
+        <span class="edge e-left">← Left edge</span>
+        <span class="edge e-right">Right edge →</span>
+        <span class="edge e-bottom">↑ Bottom edge</span>
+        <svg class="mascot desk-mascot" id="deskMochi" viewBox="0 0 200 200" aria-label="Mochi desktop mascot, drag to move"><use href="#mochi"/></svg>
+        <div class="dock"><i></i><i></i><i class="hl"></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="controls reveal">
+        <div class="ctl"><span>✥</span><div><b>Draggable mascot</b><small>Move Mochi anywhere, then let it snap to an edge.</small></div></div>
+        <div class="ctl"><span>⌨</span><div><b>Global shortcut</b><small>Open Mochi from any app.</small></div></div>
+        <div class="ctl"><span>◉</span><div><b>Voice activation</b><small>Speak to Mochi when you choose to.</small></div></div>
+        <div class="ctl"><span>⌘</span><div><b>Native notifications</b><small>Gentle reminders in macOS.</small></div></div>
+        <div class="ctl"><span>⊤</span><div><b>Always-on-top</b><small>Keep Mochi visible above windows.</small></div></div>
+        <div class="ctl"><span>–</span><div><b>Minimize or hide</b><small>Stay quiet when you need focus.</small></div></div>
+      </div>
+    </div>
+    <aside class="side-col">
+      <div class="card reveal">
+        <h3>Popup animations</h3>
+        <p class="small">Click a direction to see Mochi slide in from that edge.</p>
+        <div class="dir-grid" role="group" aria-label="Popup direction">
+          <button class="dir d-l active" data-dir="left" type="button">← From left</button>
+          <button class="dir d-r" data-dir="right" type="button">From right →</button>
+          <button class="dir d-t" data-dir="top" type="button">↓ From top</button>
+          <button class="dir d-b" data-dir="bottom" type="button">↑ From bottom</button>
+        </div>
+      </div>
+      <div class="card reveal" style="margin-top:24px">
+        <h3>Your desktop, your rules.</h3>
+        <p class="small lg">Choose when Mochi appears, where it lives, and when it stays quiet.</p>
+        <ul class="check"><li>Menu bar integration</li><li>Optional launch at startup</li><li>Persistent preferences</li></ul>
+        <a href="#desktop" class="btn btn-primary mt">Explore Desktop Experience</a>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ SCROLL TOUR (sticky MacBook) ============ -->
+<section class="section tour" id="tour" aria-label="Feature tour">
+  <div class="tour-grid">
+    <div class="tour-steps">
+      <span class="eyebrow">A day with Mochi</span>
+      <h2>Scroll to see Mochi at work.</h2>
+      <article class="step on" data-view="0"><h3>Talk, and Mochi listens</h3><p class="small lg">Live transcription shows your words as you speak.</p></article>
+      <article class="step" data-view="1"><h3>Remember the good stuff</h3><p class="small lg">Milestones and moments are saved to your Memory Vault.</p></article>
+      <article class="step" data-view="2"><h3>Gentle reminders</h3><p class="small lg">A little nudge to drink water, right when you need it.</p></article>
+      <article class="step" data-view="3"><h3>Create with Mochi</h3><p class="small lg">Turn a rough idea into a launch-ready draft.</p></article>
+    </div>
+    <div class="tour-sticky">
+      <div class="laptop tour-laptop">
+        <div class="lid"><div class="screen tour-screen">
+          <div class="view on" data-view="0">
+            <div class="chat-line"><span class="bubble-u">Remind me to drink water at 4</span></div>
+            <div class="chat-line"><span class="bubble-b">Done! I'll nudge you at 4 o'clock.</span></div>
+            <div class="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+          <div class="view" data-view="1">
+            <div class="mem-card"><b>Shipped my first portfolio</b><small>Saved · Oct 28</small></div>
+            <div class="mem-card"><b>Finished React hooks module</b><small>Saved · Oct 19</small></div>
+          </div>
+          <div class="view" data-view="2">
+            <div class="reminder-card">💧 <b>Time for a glass of water</b><small>5 of 8 glasses today</small></div>
+          </div>
+          <div class="view" data-view="3">
+            <div class="draft-card"><small>DRAFT · PRODUCT LAB</small><b>Session Sprinter</b><small>15-minute study sprints with a gentle check-in between each.</small></div>
+          </div>
+        </div></div>
+        <div class="base"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MOOD ============ -->
+<section class="section" id="mood">
+  <div class="head center reveal">
+    <span class="eyebrow">The Mochi Mood Center</span>
+    <h2>Every mood has a Mochi.</h2>
+    <p class="lead">Pick how you feel and the whole page tints to match. Click a state to see Mochi's expression.</p>
+    <div class="mood-pick" role="group" aria-label="Pick your mood" id="moodPick">
+      <button type="button" data-tint="Calm">😌 Calm</button>
+      <button type="button" data-tint="Focused">🎯 Focused</button>
+      <button type="button" data-tint="Happy">😄 Happy</button>
+      <button type="button" data-tint="Tired">😴 Tired</button>
+    </div>
+  </div>
+  <div class="state-grid">
+    <button class="card state active" data-state="idle" type="button"><div class="state-box lav-bg"><svg class="mascot" viewBox="0 0 200 200"><use href="#mochi"/></svg></div><span class="kbd">IDLE</span><h3>Floating gently</h3><p class="small">Blinking, looking around, and waiting quietly.</p></button>
+    <button class="card state" data-state="listening" type="button"><div class="state-box blue-bg"><span class="ring"></span><svg class="mascot" viewBox="0 0 200 200"><use href="#mochi"/></svg></div><span class="kbd">LISTENING</span><h3>Soft heartbeat pulse</h3><p class="small">Concentrating with a visible listening indicator.</p></button>
+    <button class="card state" data-state="speaking" type="button"><div class="state-box pink-bg"><svg class="mascot" viewBox="0 0 200 200"><use href="#mochi"/></svg><div class="wave small-wave"><i></i><i></i><i></i><i></i><i></i></div></div><span class="kbd">SPEAKING</span><h3>Bounces while responding</h3><p class="small">Playful motion that matches each reply.</p></button>
+    <button class="card state" data-state="thinking" type="button"><div class="state-box lav-bg"><svg class="mascot" viewBox="0 0 200 200"><use href="#mochi"/></svg><span class="dots">· · ·</span></div><span class="kbd">THINKING</span><h3>Processing with care</h3><p class="small">Expressive thinking while your answer is prepared.</p></button>
+    <button class="card state" data-state="sleeping" type="button"><div class="state-box grey-bg"><svg class="mascot" viewBox="0 0 200 200"><use href="#mochi"/></svg><span class="zz">z z</span></div><span class="kbd">SLEEPING</span><h3>Soft resting</h3><p class="small">A calm rest when Mochi is inactive.</p></button>
+    <button class="card state" data-state="hydration" type="button"><div class="state-box blue-bg"><svg class="mascot" viewBox="0 0 200 200"><use href="#mochi"/></svg><span class="drop">💧</span></div><span class="kbd">HYDRATION</span><h3>Cute drinking reminder</h3><p class="small">Gently reminds you to drink water.</p></button>
+  </div>
+  <div class="card analytics reveal">
+    <div>
+      <span class="kbd">MOOD ANALYTICS</span>
+      <h3 class="h3-xl">This week with Mochi</h3>
+      <p class="small">Conversation modes and the moods you chose to check in.</p>
+      <div class="bars" id="bars">
+        <div data-h="60" style="background:#D8CBF0"></div><div data-h="85" style="background:#9272CF"></div><div data-h="45" style="background:#D8CBF0"></div><div data-h="70" style="background:#F6C6E2"></div><div data-h="95" style="background:#9272CF"></div><div data-h="55" style="background:#D8CBF0"></div><div data-h="40" style="background:#F6C6E2"></div>
+      </div>
+      <div class="days"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+    </div>
+    <div>
+      <h3>Mood check-ins</h3>
+      <div class="moods" id="moods">
+        <button class="mood-chip" type="button" data-mood="Calm">😌 Calm</button>
+        <button class="mood-chip" type="button" data-mood="Focused">🎯 Focused</button>
+        <button class="mood-chip" type="button" data-mood="Happy">😄 Happy</button>
+        <button class="mood-chip" type="button" data-mood="Tired">😴 Tired</button>
+      </div>
+      <p class="small">Mochi uses your check-ins only to show trends you can see.</p>
+      <div class="insight" id="insight">Your most focused day was Tuesday.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MEMORY ============ -->
+<section class="section tint" id="memory">
+  <div class="split">
+    <div class="reveal">
+      <span class="eyebrow">Memory Vault</span>
+      <h2>Some moments are too special to forget.</h2>
+      <p class="lead">Mochi can help you preserve the little things that matter, from achievements and milestones to funny conversations and personal preferences.</p>
+      <div class="card privacy-note"><span class="lock">🔒</span><div><b>You stay in control of what Mochi remembers.</b><small>Save manually, or approve automatic capture. Edit or delete anything at any time.</small></div></div>
+      <div class="rows">
+        <div class="row"><span>Manual memory capture</span><a href="#memForm" class="row-link">Add a memory yourself</a></div>
+        <div class="row"><span>User-approved automatic capture</span><button class="toggle on" id="autoToggle" type="button" aria-pressed="true" aria-label="Automatic capture"></button></div>
+        <div class="row"><span>Edit and delete controls</span><small>✎ &nbsp; 🗑</small></div>
+      </div>
+    </div>
+    <div class="card vault reveal">
+      <form class="mem-form" id="memForm" autocomplete="off">
+        <input id="memText" type="text" maxlength="140" placeholder="Save a moment… e.g. Launched my first app" aria-label="New memory" />
+        <select id="memCat" aria-label="Category">
+          <option>Milestone</option><option>Achievement</option><option>Conversation</option><option>Preference</option>
+        </select>
+        <button class="btn btn-primary btn-sm" type="submit">Save</button>
+      </form>
+      <label class="search"><span>⌕</span><input id="memSearch" type="search" placeholder="Search memories…" aria-label="Search memories" /></label>
+      <div class="filters" id="filters">
+        <button class="filter on" data-f="all" type="button">All</button>
+        <button class="filter" data-f="Milestone" type="button">Milestones</button>
+        <button class="filter" data-f="Achievement" type="button">Achievements</button>
+        <button class="filter" data-f="Conversation" type="button">Conversations</button>
+        <button class="filter" data-f="Preference" type="button">Preferences</button>
+      </div>
+      <ol class="timeline" id="timeline"></ol>
+      <p class="empty" id="memEmpty" hidden>No memories match that. Try another search or filter.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CREATIVE ============ -->
+<section class="section" id="creative">
+  <div class="head center reveal">
+    <span class="eyebrow">Creative Studio</span>
+    <h2>Dream it. Design it. Create it with Mochi.</h2>
+    <p class="lead">Your personal creative space for transforming random thoughts into exciting ideas.</p>
+  </div>
+  <div class="tools">
+    <button class="tool t-lav reveal active" data-tool="product" type="button"><span class="n">01</span><h3>Product Lab</h3><p class="small">Brainstorm product features, names, concepts, and innovative ideas.</p><span class="arrow">→</span></button>
+    <button class="tool t-pink reveal" data-tool="social" type="button"><span class="n">02</span><h3>Social Studio</h3><p class="small">Write social media captions, LinkedIn posts, announcements, and content campaigns.</p><span class="arrow">→</span></button>
+    <button class="tool t-blue reveal" data-tool="design" type="button"><span class="n">03</span><h3>Design Playground</h3><p class="small">Explore visual layouts, UI/UX ideas, color palettes, and creative directions.</p><span class="arrow">→</span></button>
+    <button class="tool t-green reveal" data-tool="prompt" type="button"><span class="n">04</span><h3>Prompt Atelier</h3><p class="small">Develop better prompts, AI personas, and intelligent agent instructions.</p><span class="arrow">→</span></button>
+  </div>
+  <div class="studio">
+    <div class="card editor reveal">
+      <div class="ed-head"><b>Prompt editor</b><span class="small" id="toolLabel">Product Lab · Brainstorm</span></div>
+      <textarea id="prompt" class="textarea" rows="4" aria-label="Prompt"></textarea>
+      <div class="seg" id="outputTypes" role="group" aria-label="Output type">
+        <button class="on" type="button">Product Concepts</button>
+        <button type="button">Social Media Copy</button>
+        <button type="button">UI/UX Design</button>
+        <button type="button">Prompt Engineering</button>
+      </div>
+      <div class="ed-actions">
+        <button class="btn btn-ghost btn-sm" id="improveBtn" type="button">✦ Improve prompt</button>
+        <button class="btn btn-primary btn-sm" id="genBtn" type="button">Generate creative output</button>
+      </div>
+      <p class="small note-s">Demo preview. Connect the Gemini backend to generate real output.</p>
+    </div>
+    <div class="card output-card reveal">
+      <span class="kbd">GENERATED EXAMPLE</span>
+      <h3 id="outTitle">Three feature ideas</h3>
+      <div class="output" id="outBody" aria-live="polite"></div>
+      <p class="small">Saved to Recent Creations · Edit, duplicate, or open anytime.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WELLNESS ============ -->
+<section class="section tint-blue" id="wellness">
+  <div class="head center reveal">
+    <span class="eyebrow">Your personal wellness buddy</span>
+    <h2>Little reminders. Better everyday habits.</h2>
+    <p class="lead">Supportive nudges that never feel demanding.</p>
+  </div>
+  <div class="grid3">
+    <article class="card reveal">
+      <div class="ico blue">💧</div>
+      <h3>Hydration tracker</h3>
+      <p class="small">Daily water goal: 2.0 L</p>
+      <div class="glasses" id="glasses" aria-label="Water glasses"></div>
+      <p class="small" id="glassCount">5 of 8 glasses · reminders every 90 minutes</p>
+      <div class="remind-row">
+        <button class="btn btn-primary btn-sm" id="remindBtn" type="button">Turn on reminders</button>
+        <button class="btn btn-ghost btn-sm" id="testRemind" type="button">Test now</button>
+      </div>
+      <p class="small" id="remindStatus">Reminders are off.</p>
+      <div class="bubble mt">Custom reminder personality: “Sip, sip, Mochi says hi.”</div>
+    </article>
+    <article class="card reveal">
+      <div class="ico pink">⏱️</div>
+      <h3>Focus Guardian</h3>
+      <p class="small">Focus sessions with a Pomodoro timer</p>
+      <div class="ring-wrap"><div class="ring" id="ring"><div><strong id="timer">25:00</strong><small id="timerLabel">Focus · 25 min</small></div></div></div>
+      <div class="ring-btns"><button class="btn btn-primary btn-sm" id="timerBtn" type="button">Start</button><button class="btn btn-ghost btn-sm" id="timerReset" type="button">Reset</button></div>
+      <div class="row-inline"><span>Break reminder</span><button class="toggle on" type="button" aria-pressed="true" aria-label="Break reminder"></button></div>
+      <p class="small">Today: 3 sessions · 5 tasks done</p>
+    </article>
+    <article class="card reveal">
+      <div class="ico green">✨</div>
+      <h3>Daily Habits</h3>
+      <p class="small">Gentle motivation and progress tracking</p>
+      <div class="row-inline"><span>Weekly progress</span><b><span id="habitDays">4</span> / 7 days</b></div>
+      <div class="bar tall"><i id="habitBar" style="width:57%"></i></div>
+      <ul class="wins">
+        <li><span>☀ Morning walk</span><button class="done-btn" type="button" aria-pressed="true">Done</button></li>
+        <li><span>📖 Read 10 pages</span><button class="done-btn" type="button" aria-pressed="true">Done</button></li>
+        <li><span>🌿 Daily win</span><button class="done-btn" type="button" aria-pressed="false">Log it</button></li>
+      </ul>
+      <div class="bubble green-b mt">Personal milestone: 4-day streak. Lovely work.</div>
+    </article>
+  </div>
+</section>
+
+<!-- ============ PERSONALIZE ============ -->
+<section class="section" id="personalize">
+  <div class="split">
+    <div class="reveal">
+      <span class="eyebrow">Personalize Mochi</span>
+      <h2>Make Mochi unmistakably yours.</h2>
+      <p class="lead">Dress Mochi up, choose a personality, and tune its voice until it feels right. Hit preview to hear it.</p>
+      <div class="custom">
+        <div><b>Outfits & accessories</b><div class="seg" data-group="outfit"><button class="on" type="button">Bow</button><button type="button">Scarf</button><button type="button">Crown</button><button type="button">Hat</button></div></div>
+        <div><b>Expressions</b><div class="seg" data-group="expr"><button class="on" type="button">Happy</button><button type="button">Sleepy</button><button type="button">Curious</button></div></div>
+        <div><b>Background theme</b><div class="swatches"><button class="swatch on" style="background:#F0EAF9" type="button" aria-label="Lavender"></button><button class="swatch" style="background:#FCEEF3" type="button" aria-label="Pink"></button><button class="swatch" style="background:#E6F1F8" type="button" aria-label="Blue"></button><button class="swatch" style="background:#E7F6EE" type="button" aria-label="Mint"></button></div></div>
+        <div><b>Voice presets</b><div class="seg" data-group="voice"><button class="on" type="button">Warm</button><button type="button">Bright</button><button type="button">Calm</button><button type="button" id="savePreset">+ Save preset</button></div></div>
+      </div>
+    </div>
+    <div class="preview reveal" id="preview">
+      <div class="card vp">
+        <div class="vp-head"><b>Vocal Personality</b><span class="tagc lav-t" id="presetTag">Preset: Warm</span></div>
+        <label class="slider-label">Vocal pitch <output id="pitchOut">45</output>
+          <input type="range" min="0" max="100" value="45" id="pitch" /></label>
+        <label class="slider-label">Speaking speed <output id="speedOut">35</output>
+          <input type="range" min="0" max="100" value="35" id="speed" /></label>
+        <button class="btn btn-primary btn-sm vp-preview" id="previewVoice" type="button">▶ Preview voice</button>
+      </div>
+      <svg class="mascot pv-mascot" viewBox="0 0 200 200" aria-label="Mochi preview"><use href="#mochi"/></svg>
+      <span class="tagc lav-t pv-tag" id="pvTag">Bow · Happy · Warm</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ COMPARE ============ -->
+<section class="section tint" id="compare">
+  <div class="head center reveal">
+    <span class="eyebrow">Web or desktop?</span>
+    <h2>Meet Mochi wherever you feel at home.</h2>
+    <p class="lead">Start on the web right now, or bring Mochi to your Mac desktop.</p>
+  </div>
+  <div class="grid2">
+    <div class="card compare-card reveal"><span class="kbd">NO INSTALLATION REQUIRED</span><h3 class="h3-xl">Web Companion</h3>
+      <ul class="check"><li>Browser-based AI experience</li><li>Creative Studio</li><li>Memory Vault</li><li>Voice interaction</li><li>Personal analytics</li><li>Browser notifications when enabled</li></ul>
+      <a href="#hero" class="btn btn-primary mt">Start on the Web</a></div>
+    <div class="card compare-card alt-bg reveal"><span class="kbd">DOWNLOADABLE APP</span><h3 class="h3-xl">Mac Desktop</h3>
+      <ul class="check"><li>Floating desktop companion</li><li>Global shortcuts</li><li>Native notifications</li><li>Edge popup animations</li><li>Optional startup launch</li><li>Terminal controls and desktop preferences</li></ul>
+      <a href="#desktop" class="btn btn-primary mt">Get Mochi for Mac</a></div>
+  </div>
+  <div class="sync center reveal"><b>Love both? Sync your experience.</b><p class="small lg">Both experiences are designed to work together, so your preferences and approved memories follow you.</p></div>
+</section>
+
+<!-- ============ PRIVACY ============ -->
+<section class="section" id="privacy">
+  <div class="split">
+    <div class="reveal">
+      <span class="eyebrow">Privacy & trust</span>
+      <h2>Your little world stays yours.</h2>
+      <p class="lead">Privacy is part of how Mochi is built, not an afterthought. You decide what Mochi hears, remembers, and shows.</p>
+      <svg class="mascot priv-mascot" viewBox="0 0 200 200" aria-hidden="true"><use href="#mochi"/></svg>
+    </div>
+    <ul class="priv reveal">
+      <li><span>🧠</span><div><b>User-controlled memory</b><small>Only approved memories are kept.</small></div></li>
+      <li><span>🎙️</span><div><b>Explicit microphone permission</b><small>Mochi listens only when you turn it on.</small></div></li>
+      <li><span>●</span><div><b>Visible listening status</b><small>You can always see when Mochi is listening.</small></div></li>
+      <li><span>🚫</span><div><b>No secret recording</b><small>Nothing is recorded in the background.</small></div></li>
+      <li><span>🔗</span><div><b>Secure backend API communication</b><small>Requests go through the Mochi backend.</small></div></li>
+      <li><span>🔔</span><div><b>Optional notifications & startup</b><small>Both are off until you choose them.</small></div></li>
+      <li><span>🗑️</span><div><b>Memory deletion controls</b><small>Delete any memory whenever you like.</small></div></li>
+      <li><span>⤓</span><div><b>Data export & transparent permissions</b><small>Take your data with you and review every permission.</small></div></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ FINAL CTA ============ -->
+<section class="final" id="final">
+  <svg class="mascot wave-mascot" viewBox="0 0 200 200" aria-hidden="true"><use href="#mochi"/></svg>
+  <h2 class="reveal">Ready to make your Mac a little more magical?</h2>
+  <p class="lead reveal">Your ideas, your little memories, your everyday moments — Mochi is ready to be part of them.</p>
+  <div class="btn-row center reveal">
+    <a href="#hero" class="btn btn-primary">Meet Your Mochi</a>
+    <a href="#desktop" class="btn btn-white">Download for Mac</a>
+  </div>
+</section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="fcols">
+    <div>
+      <div class="brand"><svg width="34" height="34" viewBox="0 0 200 200" aria-hidden="true"><use href="#mochi"/></svg><strong>Mochi — Your Mac Buddy</strong></div>
+      <p class="small fdesc">An adorable, intelligent desktop companion for web and Mac. A little companion. A lot of magic.</p>
+    </div>
+    <div><h4>Product</h4><a href="#features">Features</a><a href="#creative">Creative Studio</a><a href="#desktop">Desktop Application</a></div>
+    <div><h4>Company</h4><a href="#privacy">Privacy Policy</a><a href="#privacy">Terms of Service</a><a href="#final">Contact</a></div>
+    <div><h4>Follow</h4><a href="#">Twitter / X</a><a href="#">Instagram</a><a href="#">YouTube</a></div>
+  </div>
+  <div class="fbase"><span>© 2026 Mochi. All rights reserved.</span><span>Made with a little magic · Press ⌘K / Ctrl+K</span></div>
+</footer>
+
+<!-- ============ FLOATING MOCHI COMPANION ============ -->
+<div class="companion" id="companion">
+  <div class="chat-panel" id="chatPanel" hidden>
+    <div class="chat-head"><b>Chat with Mochi</b><button class="icon-btn" id="chatClose" type="button" aria-label="Close chat">✕</button></div>
+    <div class="chat-body" id="chatBody">
+      <div class="msg bot">Hi! I'm Mochi. How can I help today?</div>
+    </div>
+    <div class="quick">
+      <button class="chip-btn" type="button" data-q="What can you do?">What can you do?</button>
+      <button class="chip-btn" type="button" data-q="Set a hydration reminder">Hydration reminder</button>
+    </div>
+    <form class="chat-form" id="chatForm">
+      <input id="chatInput" type="text" placeholder="Type a message…" aria-label="Message Mochi" />
+      <button class="btn btn-primary btn-sm" type="submit">Send</button>
+    </form>
+  </div>
+  <button class="companion-btn" id="companionBtn" type="button" aria-label="Open Mochi chat" aria-expanded="false">
+    <svg class="mascot" viewBox="0 0 200 200" aria-hidden="true"><use href="#mochi"/></svg>
+    <span class="online" aria-hidden="true"></span>
+  </button>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
